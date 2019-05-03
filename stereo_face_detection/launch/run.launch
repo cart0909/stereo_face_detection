@@ -4,4 +4,7 @@
   </node>
   <node name="face_detection" pkg="libfacedetection" type="face_detection_node" output="screen"/>
   <node name="template_matching" pkg="template_matching" type="template_matching_node" output="screen"/>
+  <node name="image_view" pkg="image_view" type="image_view" output="screen">
+    <remap from="image" to="/result/image_raw"/>
+  </node>
 </launch>

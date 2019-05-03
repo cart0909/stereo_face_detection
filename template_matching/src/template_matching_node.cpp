@@ -13,22 +13,26 @@ class Node {
 public:
     Node(ros::NodeHandle& nh) {
         clahe = cv::createCLAHE();
+        pub_result = nh.advertise<Image>("/result/image_raw", 100);
     }
 
-    void Callback(const ImageConstPtr& rgb_msg, const ImageConstPtr& ir_msg, const ImageConstPtr& template_msg,
+    void Callback(const ImageConstPtr& rgb_msg, const ImageConstPtr& ir_msg,
                   const PointCloudConstPtr& bbox_msg) {
         cv::Mat rgb_img = cv_bridge::toCvCopy(rgb_msg, "bgr8")->image;
         cv::Mat ir_color_img = cv_bridge::toCvCopy(ir_msg, "bgr8")->image;
-        cv::Mat template_img = cv_bridge::toCvCopy(template_msg, "mono8")->image;
+        cv::Mat ir_gray_img, gray_img;
+        cv::cvtColor(rgb_img, gray_img, CV_BGR2GRAY);
+        cv::cvtColor(ir_color_img, ir_gray_img, CV_BGR2GRAY);
+
+        clahe->apply(ir_gray_img, ir_gray_img);
+
         cv::Rect rgb_face_bbox;
         rgb_face_bbox.x = bbox_msg->points[0].x;
         rgb_face_bbox.y = bbox_msg->points[0].y;
         rgb_face_bbox.width = bbox_msg->points[1].x;
         rgb_face_bbox.height = bbox_msg->points[1].y;
-        cv::Mat ir_gray_img;
-        cv::cvtColor(ir_color_img, ir_gray_img, CV_BGR2GRAY);
+        cv::Mat template_img = gray_img(rgb_face_bbox);
         clahe->apply(template_img, template_img);
-        clahe->apply(ir_gray_img, ir_gray_img);
 
         cv::Mat image_matched;
         cv::matchTemplate(ir_gray_img, template_img, image_matched, cv::TM_CCOEFF_NORMED);
@@ -37,15 +41,21 @@ public:
         cv::Point minLoc, maxLoc;
         cv::minMaxLoc(image_matched, &minVal, &maxVal, &minLoc, &maxLoc);
 
+        cv::Mat result;
         cv::Rect match_rect(maxLoc.x, maxLoc.y, rgb_face_bbox.width , rgb_face_bbox.height);
         cv::rectangle(ir_color_img, match_rect, cv::Scalar(0, 255, 0), 1);
         cv::rectangle(rgb_img, rgb_face_bbox, cv::Scalar(0, 0, 255), 1);
-        cv::imshow("img", rgb_img);
-        cv::imshow("ir", ir_color_img);
-        cv::waitKey(1);
+        cv::hconcat(ir_color_img, rgb_img, result);
+
+        cv_bridge::CvImage result_msg;
+        result_msg.header = rgb_msg->header;
+        result_msg.encoding = "bgr8";
+        result_msg.image = result;
+        pub_result.publish(result_msg);
     }
 
     cv::Ptr<cv::CLAHE> clahe;
+    ros::Publisher pub_result;
 };
 
 int main(int argc, char** argv) {
@@ -54,10 +64,9 @@ int main(int argc, char** argv) {
     Node node(nh);
 
     message_filters::Subscriber<Image> sub_rgb(nh, "/rect_rgb/image_raw", 100),
-                                       sub_ir(nh, "/rect_ir/image_raw", 100),
-                                       sub_template(nh, "/face/image_raw", 100);
+                                       sub_ir(nh, "/rect_ir/image_raw", 100);
     message_filters::Subscriber<PointCloud> sub_bbox(nh, "/face/bbox", 100);
-    TimeSynchronizer<Image, Image, Image, PointCloud> sync(sub_rgb, sub_ir, sub_template, sub_bbox, 1);
-    sync.registerCallback(boost::bind(&Node::Callback, &node, _1, _2, _3, _4));
+    TimeSynchronizer<Image, Image, PointCloud> sync(sub_rgb, sub_ir, sub_bbox, 1);
+    sync.registerCallback(boost::bind(&Node::Callback, &node, _1, _2, _3));
     ros::spin();
 }
