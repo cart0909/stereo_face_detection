@@ -30,7 +30,7 @@ StereoRectifier::StereoRectifier(const std::string& config_file, bool debug_show
     T10.colRange(0, 3).rowRange(0, 3).copyTo(R10);
     T10.col(3).rowRange(0, 3).copyTo(t10);
     cv::Mat R1, R2, P1, P2;
-    cv::stereoRectify(K0, D0, K1, D1, image_size, R10, t10, R1, R2, P1, P2, cv::noArray());
+    cv::stereoRectify(K0, D0, K1, D1, image_size, R10, t10, R1, R2, P1, P2, cv::noArray(), cv::CALIB_ZERO_DISPARITY, 0);
     cv::initUndistortRectifyMap(K0, D0, R1, P1, image_size, CV_32FC1, M1rgb, M2rgb);
     cv::initUndistortRectifyMap(K1, D1, R2, P2, image_size, CV_32FC1, M1ir, M2ir);
 }

@@ -68,7 +68,7 @@ public:
         if(y + h >= image.rows)
             h = image.rows - 1 - y;
 
-        printf("face_rect=[%d, %d, %d, %d], confidence=%d, angle=%d\n", x,y,w,h,confidence, angle);
+//        printf("face_rect=[%d, %d, %d, %d], confidence=%d, angle=%d\n", x,y,w,h,confidence, angle);
 
         cv::Rect face_bbox(x, y, w, h);
         cv::Mat face_img = image(face_bbox).clone();

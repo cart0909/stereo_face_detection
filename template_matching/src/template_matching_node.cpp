@@ -12,7 +12,7 @@ using namespace sensor_msgs;
 class Node {
 public:
     Node(ros::NodeHandle& nh) {
-        clahe = cv::createCLAHE(5.0);
+        clahe = cv::createCLAHE();
     }
 
     void Callback(const ImageConstPtr& rgb_msg, const ImageConstPtr& ir_msg, const ImageConstPtr& template_msg,
