@@ -13,7 +13,8 @@ class Node {
 public:
     Node(ros::NodeHandle& nh) {
         clahe = cv::createCLAHE();
-        pub_result = nh.advertise<Image>("/result/image_raw", 100);
+        pub_result_img = nh.advertise<Image>("/result/image_raw", 100);
+        pub_ir_face_bbox = nh.advertise<PointCloud>("/ir_face/bbox", 100);
     }
 
     void Callback(const ImageConstPtr& rgb_msg, const ImageConstPtr& ir_msg,
@@ -47,15 +48,28 @@ public:
         cv::rectangle(rgb_img, rgb_face_bbox, cv::Scalar(0, 0, 255), 1);
         cv::hconcat(ir_color_img, rgb_img, result);
 
-        cv_bridge::CvImage result_msg;
-        result_msg.header = rgb_msg->header;
-        result_msg.encoding = "bgr8";
-        result_msg.image = result;
-        pub_result.publish(result_msg);
+        cv_bridge::CvImage result_img_msg;
+        result_img_msg.header = rgb_msg->header;
+        result_img_msg.encoding = "bgr8";
+        result_img_msg.image = result;
+        pub_result_img.publish(result_img_msg);
+
+        PointCloud ir_face_bbox_msg;
+        ir_face_bbox_msg.header = rgb_msg->header;
+        geometry_msgs::Point32 pt;
+        pt.x = match_rect.x;
+        pt.y = match_rect.y;
+        pt.z = 0;
+        ir_face_bbox_msg.points.emplace_back(pt);
+        pt.x = match_rect.width;
+        pt.y = match_rect.height;
+        ir_face_bbox_msg.points.emplace_back(pt);
+        pub_ir_face_bbox.publish(ir_face_bbox_msg);
     }
 
     cv::Ptr<cv::CLAHE> clahe;
-    ros::Publisher pub_result;
+    ros::Publisher pub_result_img;
+    ros::Publisher pub_ir_face_bbox;
 };
 
 int main(int argc, char** argv) {
