@@ -1,0 +1,7 @@
+<launch>
+  <node name="stereo_rectifier" pkg="simple_stereo_camera" type="stereo_rectifier_node" output="screen">
+    <param name="config_file" value="$(find simple_stereo_camera)/config/config.yaml" />
+  </node>
+  <node name="face_detection" pkg="libfacedetection" type="face_detection_node" output="screen"/>
+  <node name="template_matching" pkg="template_matching" type="template_matching_node" output="screen"/>
+</launch>

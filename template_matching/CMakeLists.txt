@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.8.3)
-project(simple_stereo_camera)
+project(template_matching)
 
 ## Compile as C++11, supported in ROS Kinetic and newer
 add_compile_options(-std=c++11)
@@ -9,21 +9,20 @@ set(CMAKE_BUILD_TYPE Release)
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS
-  cmake_modules
-  cv_bridge
-  nav_msgs
-  roscpp
-  roslib
-  sensor_msgs
-  std_msgs
-  visualization_msgs
-  rosbag
-  message_filters
+    cmake_modules
+    cv_bridge
+    nav_msgs
+    roscpp
+    roslib
+    sensor_msgs
+    std_msgs
+    visualization_msgs
+    rosbag
+    message_filters
 )
 
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
-find_package(Eigen3 REQUIRED)
 find_package(OpenCV REQUIRED)
 
 ## Uncomment this if the package has a setup.py. This macro ensures
@@ -113,8 +112,8 @@ find_package(OpenCV REQUIRED)
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
 #  INCLUDE_DIRS include
-#  LIBRARIES simple_stereo_camera
-#  CATKIN_DEPENDS other_catkin_pkg
+#  LIBRARIES template_matching
+#  CATKIN_DEPENDS libfacedetection simple_stereo_camera
 #  DEPENDS system_lib
 )
 
@@ -128,42 +127,11 @@ include_directories(
 # include
   ${catkin_INCLUDE_DIRS}
   ${OpenCV_INCLUDE_DIRS}
-  ${EIGEN3_INCLUDE_DIR}
-)
-
-add_executable(stereo_validator_node
-src/stereo_validator_node.cpp
-src/stereo_rectifier.cpp
-)
-
-target_link_libraries(stereo_validator_node
-${catkin_LIBRARIES}
-${OpenCV_LIBS}
-)
-
-#add_executable(template_matching_node
-#src/template_matching_node.cpp
-#src/stereo_rectifier.cpp
-#)
-
-#target_link_libraries(template_matching_node
-#${catkin_LIBRARIES}
-#${OpenCV_LIBS}
-#)
-
-add_executable(stereo_rectifier_node
-src/stereo_rectifier_node.cpp
-src/stereo_rectifier.cpp
-)
-
-target_link_libraries(stereo_rectifier_node
-${catkin_LIBRARIES}
-${OpenCV_LIBS}
 )
 
 ## Declare a C++ library
 # add_library(${PROJECT_NAME}
-#   src/${PROJECT_NAME}/simple_stereo_camera.cpp
+#   src/${PROJECT_NAME}/template_matching.cpp
 # )
 
 ## Add cmake target dependencies of the library
@@ -174,7 +142,7 @@ ${OpenCV_LIBS}
 ## Declare a C++ executable
 ## With catkin_make all packages are built within a single CMake context
 ## The recommended prefix ensures that target names across packages don't collide
-# add_executable(${PROJECT_NAME}_node src/simple_stereo_camera_node.cpp)
+add_executable(${PROJECT_NAME}_node src/template_matching_node.cpp)
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
@@ -187,9 +155,10 @@ ${OpenCV_LIBS}
 # add_dependencies(${PROJECT_NAME}_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 ## Specify libraries to link a library or executable target against
-# target_link_libraries(${PROJECT_NAME}_node
-#   ${catkin_LIBRARIES}
-# )
+target_link_libraries(${PROJECT_NAME}_node
+  ${catkin_LIBRARIES}
+  ${OpenCV_LIBS}
+)
 
 #############
 ## Install ##
@@ -231,7 +200,7 @@ ${OpenCV_LIBS}
 #############
 
 ## Add gtest based cpp test target and link libraries
-# catkin_add_gtest(${PROJECT_NAME}-test test/test_simple_stereo_camera.cpp)
+# catkin_add_gtest(${PROJECT_NAME}-test test/test_template_matching.cpp)
 # if(TARGET ${PROJECT_NAME}-test)
 #   target_link_libraries(${PROJECT_NAME}-test ${PROJECT_NAME})
 # endif()

@@ -1,6 +1,8 @@
 <launch>
+  <arg name="index0" default="0"/>
+  <arg name="index1" default="1"/>
   <node name="cam1" pkg="usb_cam" type="usb_cam_node" output="screen" >
-    <param name="video_device" value="/dev/video0" />
+    <param name="video_device" value="/dev/video$(arg index0)" />
     <param name="image_width" value="640" />
     <param name="image_height" value="480" />
     <param name="framerate" value="20" />
@@ -9,7 +11,7 @@
     <param name="io_method" value="mmap"/>
   </node>
   <node name="cam2" pkg="usb_cam" type="usb_cam_node" output="screen" >
-    <param name="video_device" value="/dev/video1" />
+    <param name="video_device" value="/dev/video$(arg index1)" />
     <param name="image_width" value="640" />
     <param name="image_height" value="480" />
     <param name="framerate" value="20" />

@@ -17,8 +17,8 @@ class Node {
 public:
     Node(ros::NodeHandle& nh, const std::string& config_file)
         : stereo_rectifier(config_file, false) {
-        pub_rect_rgb = nh.advertise<Image>("/rect_rgb/image_raw", 10);
-        pub_rect_ir = nh.advertise<Image>("/rect_ir/image_raw", 10);
+        pub_rect_rgb = nh.advertise<Image>("/rect_rgb/image_raw", 1000);
+        pub_rect_ir = nh.advertise<Image>("/rect_ir/image_raw", 1000);
     }
 
     void Callback(const ImageConstPtr& rgb_msg, const ImageConstPtr& ir_msg) {
@@ -28,7 +28,7 @@ public:
 
         cv_bridge::CvImage rect_rgb_img, rect_ir_img;
         rect_rgb_img.header = rgb_msg->header;
-        rect_ir_img.header = ir_msg->header;
+        rect_ir_img.header = rgb_msg->header;
         rect_rgb_img.encoding = "bgr8";
         rect_ir_img.encoding = "bgr8";
         rect_rgb_img.image = rgb_img;
