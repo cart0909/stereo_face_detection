@@ -11,7 +11,8 @@ public:
 
     filesystem::path root;
     // backlight_lester carl_close
-    using DataPair = std::pair<std::string, std::map<std::string, std::pair<std::set<std::string>, std::set<std::string>>>>;
-    using DataStruct = std::map<std::string, std::map<std::string, std::pair<std::set<std::string>, std::set<std::string>>>>;
+    using DataPair = std::pair<std::string, std::map<std::string, std::pair<std::set<int>, std::set<int>>>>;
+    using DataStruct = std::map<std::string, std::map<std::string, std::pair<std::set<int>, std::set<int>>>>;
     DataStruct data_struct;
+    std::vector<std::pair<std::string, std::string>> v_rgb_ir_filename;
 };
