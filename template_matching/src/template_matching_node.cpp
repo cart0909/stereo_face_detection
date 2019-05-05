@@ -27,49 +27,68 @@ public:
 
         clahe->apply(ir_gray_img, ir_gray_img);
 
-        cv::Rect rgb_face_bbox;
-        rgb_face_bbox.x = bbox_msg->points[0].x;
-        rgb_face_bbox.y = bbox_msg->points[0].y;
-        rgb_face_bbox.width = bbox_msg->points[1].x;
-        rgb_face_bbox.height = bbox_msg->points[1].y;
-        cv::Mat template_img = gray_img(rgb_face_bbox);
-        clahe->apply(template_img, template_img);
+        PointCloud ir_face_bbox_msg;
+        ir_face_bbox_msg.header = rgb_msg->header;
 
-        cv::Mat image_matched;
-        cv::matchTemplate(ir_gray_img, template_img, image_matched, cv::TM_CCOEFF_NORMED);
-        // find the best matching local
-        double minVal, maxVal;
-        cv::Point minLoc, maxLoc;
-        cv::minMaxLoc(image_matched, &minVal, &maxVal, &minLoc, &maxLoc);
+        for(int i = 0, n = bbox_msg->points.size() / 2; i < n; ++i) {
+            cv::Rect rgb_face_bbox;
+            rgb_face_bbox.x = bbox_msg->points[2*i].x;
+            rgb_face_bbox.y = bbox_msg->points[2*i].y;
+            rgb_face_bbox.width = bbox_msg->points[2*i+1].x;
+            rgb_face_bbox.height = bbox_msg->points[2*i+1].y;
+            cv::Mat template_img = gray_img(rgb_face_bbox);
+            clahe->apply(template_img, template_img);
+
+            cv::Mat image_matched;
+            cv::matchTemplate(ir_gray_img, template_img, image_matched, cv::TM_CCOEFF_NORMED);
+
+            // find the best matching local
+            double minVal, maxVal;
+            cv::Point minLoc, maxLoc;
+            cv::minMaxLoc(image_matched, &minVal, &maxVal, &minLoc, &maxLoc);
+
+            cv::Rect match_rect(maxLoc.x, maxLoc.y, rgb_face_bbox.width , rgb_face_bbox.height);
+
+            // debug
+            cv::rectangle(ir_color_img, match_rect, color_table[i], 1);
+            cv::rectangle(rgb_img, rgb_face_bbox, color_table[i], 1);
+
+            geometry_msgs::Point32 pt;
+            pt.x = match_rect.x;
+            pt.y = match_rect.y;
+            pt.z = 0;
+            ir_face_bbox_msg.points.emplace_back(pt);
+            pt.x = match_rect.width;
+            pt.y = match_rect.height;
+            ir_face_bbox_msg.points.emplace_back(pt);
+        }
 
         cv::Mat result;
-        cv::Rect match_rect(maxLoc.x, maxLoc.y, rgb_face_bbox.width , rgb_face_bbox.height);
-        cv::rectangle(ir_color_img, match_rect, cv::Scalar(0, 255, 0), 1);
-        cv::rectangle(rgb_img, rgb_face_bbox, cv::Scalar(0, 0, 255), 1);
-        cv::hconcat(ir_color_img, rgb_img, result);
-
+        cv::hconcat(rgb_img, ir_color_img, result);
         cv_bridge::CvImage result_img_msg;
         result_img_msg.header = rgb_msg->header;
         result_img_msg.encoding = "bgr8";
         result_img_msg.image = result;
         pub_result_img.publish(result_img_msg);
-
-        PointCloud ir_face_bbox_msg;
-        ir_face_bbox_msg.header = rgb_msg->header;
-        geometry_msgs::Point32 pt;
-        pt.x = match_rect.x;
-        pt.y = match_rect.y;
-        pt.z = 0;
-        ir_face_bbox_msg.points.emplace_back(pt);
-        pt.x = match_rect.width;
-        pt.y = match_rect.height;
-        ir_face_bbox_msg.points.emplace_back(pt);
         pub_ir_face_bbox.publish(ir_face_bbox_msg);
     }
 
     cv::Ptr<cv::CLAHE> clahe;
     ros::Publisher pub_result_img;
     ros::Publisher pub_ir_face_bbox;
+
+    cv::Scalar color_table[10] = {
+        cv::Scalar(0, 0, 255),
+        cv::Scalar(0, 128, 255),
+        cv::Scalar(0, 255, 255),
+        cv::Scalar(0, 255, 128),
+        cv::Scalar(0, 255, 0),
+        cv::Scalar(128, 255, 0),
+        cv::Scalar(255, 255, 0),
+        cv::Scalar(255, 128, 0),
+        cv::Scalar(255, 0, 0),
+        cv::Scalar(255, 0, 127),
+    };
 };
 
 int main(int argc, char** argv) {

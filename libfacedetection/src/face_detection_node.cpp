@@ -1,6 +1,7 @@
 #include <chrono>
 #include <ros/ros.h>
 #include <opencv2/opencv.hpp>
+#include <std_msgs/Empty.h>
 #include <sensor_msgs/Image.h>
 #include <sensor_msgs/PointCloud.h>
 #include <cv_bridge/cv_bridge.h>
@@ -15,6 +16,7 @@ class Node {
 public:
     Node(ros::NodeHandle& nh) {
         pub_bbox = nh.advertise<PointCloud>("/face/bbox", 1000);
+        pub_noface = nh.advertise<std_msgs::Empty>("/noface", 100);
         pBuffer = (unsigned char *)malloc(DETECT_BUFFER_SIZE);
         ROS_ASSERT_MSG(pBuffer, "Can not alloc buffer.");
     }
@@ -34,8 +36,10 @@ public:
         pResults = facedetect_cnn(pBuffer, (unsigned char*)(image.ptr(0)), image.cols, image.rows, (int)image.step);
 //        printf("%d faces detected.\n", (pResults ? *pResults : 0));
 
-        if(!pResults)
+        if(!pResults) {
+            pub_noface.publish(std_msgs::Empty());
             return;
+        }
 
         int n = (pResults ? *pResults : 0);
 
@@ -52,8 +56,9 @@ public:
             int confidence = p[4];
             int angle = p[5];
 
-            if(confidence < 90)
+            if(confidence < 90) {
                 continue;
+            }
 
             if(x < 0)
                 x = 0;
@@ -80,13 +85,18 @@ public:
             pt.y = h;
             pt.z = 0;
             face_bbox_msg.points.emplace_back(pt);
+        }
+        if(face_bbox_msg.points.empty()) {
+            pub_noface.publish(std_msgs::Empty());
+        }
+        else {
             pub_bbox.publish(face_bbox_msg);
         }
     }
 
     int* pResults = nullptr;
     unsigned char * pBuffer = nullptr;
-    ros::Publisher pub_bbox;
+    ros::Publisher pub_bbox, pub_noface;
 };
 
 int main(int argc, char** argv) {
