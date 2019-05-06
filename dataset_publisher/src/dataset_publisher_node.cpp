@@ -112,6 +112,20 @@ private:
         }
         cv::Mat rgb_image = cv::imread(loader->v_rgb_ir_filename[index].first, cv::IMREAD_COLOR);
         cv::Mat ir_image = cv::imread(loader->v_rgb_ir_filename[index].second, cv::IMREAD_COLOR);
+
+        while(rgb_image.empty() || ir_image.empty()) {
+            if(rgb_image.empty()) {
+                ROS_WARN_STREAM(loader->v_rgb_ir_filename[index].first << " open failed");
+            }
+
+            if(ir_image.empty()) {
+                ROS_WARN_STREAM(loader->v_rgb_ir_filename[index].second << " open failed");
+            }
+            ++index;
+            rgb_image = cv::imread(loader->v_rgb_ir_filename[index].first, cv::IMREAD_COLOR);
+            ir_image = cv::imread(loader->v_rgb_ir_filename[index].second, cv::IMREAD_COLOR);
+        }
+
         cv_bridge::CvImage rgb_msg, ir_msg;
         std_msgs::Header header;
         header.seq = index;

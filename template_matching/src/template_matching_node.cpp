@@ -45,9 +45,27 @@ public:
             // find the best matching local
             double minVal, maxVal;
             cv::Point minLoc, maxLoc;
-            cv::minMaxLoc(image_matched, &minVal, &maxVal, &minLoc, &maxLoc);
+            cv::Rect search_roi(rgb_face_bbox.x - rgb_face_bbox.width/2, rgb_face_bbox.y - rgb_face_bbox.height /2, rgb_face_bbox.width, rgb_face_bbox.height);
+            if(search_roi.x < 0)
+                search_roi.x = 0;
+            if(search_roi.y < 0)
+                search_roi.y = 0;
+            if(search_roi.x + search_roi.width >= image_matched.cols)
+                search_roi.width = image_matched.cols - search_roi.x - 1;
+            if(search_roi.y + search_roi.height >= image_matched.rows)
+                search_roi.height = image_matched.rows - search_roi.y - 1;
 
-            cv::Rect match_rect(maxLoc.x, maxLoc.y, rgb_face_bbox.width , rgb_face_bbox.height);
+            cv::minMaxLoc(image_matched(search_roi), &minVal, &maxVal, &minLoc, &maxLoc);
+            cv::Rect match_rect(maxLoc.x + search_roi.x, maxLoc.y + search_roi.y, rgb_face_bbox.width , rgb_face_bbox.height);
+
+            if(match_rect.x < 0)
+                match_rect.x = 0;
+            if(match_rect.y < 0)
+                match_rect.y = 0;
+            if(match_rect.x + match_rect.width >= ir_gray_img.cols)
+                match_rect.width = ir_gray_img.cols - match_rect.x - 1;
+            if(match_rect.y + match_rect.height >= ir_gray_img.rows)
+                match_rect.height = ir_gray_img.rows - match_rect.y - 1;
 
             // debug
             cv::rectangle(ir_color_img, match_rect, color_table[i], 1);
